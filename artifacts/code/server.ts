@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { streamObject } from 'ai';
-import { myProvider } from '@/lib/ai/models';
+import { myProvider, DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { codePrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 
@@ -10,7 +10,7 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
     let draftContent = '';
 
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(DEFAULT_CHAT_MODEL),
       system: codePrompt,
       prompt: title,
       schema: z.object({

@@ -2,6 +2,7 @@
 
 import { generateText, Message } from 'ai';
 import { cookies } from 'next/headers';
+import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 
 import {
   deleteMessagesByChatIdAfterTimestamp,
@@ -22,13 +23,14 @@ export async function generateTitleFromUserMessage({
   message: Message;
 }) {
   const { text: title } = await generateText({
-    model: myProvider.languageModel('title-model'),
-    system: `\n
-    - you will generate a short title based on the first message a user begins a conversation with
-    - ensure it is not more than 80 characters long
-    - the title should be a summary of the user's message
-    - do not use quotes or colons`,
-    prompt: JSON.stringify(message),
+    model: myProvider.languageModel(DEFAULT_CHAT_MODEL),
+    system: `
+    - You will generate a short title based on the first message a user begins a conversation with
+    - Ensure it is not more than 80 characters long
+    - The title should be concise and descriptive
+    - Do not use quotes or special characters
+    `,
+    messages: [{ role: 'user', content: message.content }],
   });
 
   return title;

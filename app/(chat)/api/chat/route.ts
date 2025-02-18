@@ -25,6 +25,7 @@ import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
+import { retrieveRelevantContext } from '@/lib/ai/vectorstore';
 
 export const maxDuration = 60;
 
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
         await saveChat({ id, userId: session.user.id, title });
       }
 
+      // Save the user message first
       await saveMessages({
         messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
       });
@@ -67,69 +69,82 @@ export async function POST(request: Request) {
       return new Response('Database operation failed', { status: 500 });
     }
 
+    const relevantContext = await retrieveRelevantContext(userMessage.content);
+    
+    const enhancedSystemPrompt = systemPrompt({ 
+      selectedChatModel,
+      context: relevantContext 
+    });
+
     return createDataStreamResponse({
-      execute: (dataStream) => {
-        const result = streamText({
-          model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel }),
-          messages,
-          maxSteps: 5,
-          experimental_activeTools:
-            selectedChatModel === 'chat-model-reasoning'
-              ? []
-              : [
-                  'getWeather',
-                  'createDocument',
-                  'updateDocument',
-                  'requestSuggestions',
-                ],
-          experimental_transform: smoothStream({ chunking: 'word' }),
-          experimental_generateMessageId: generateUUID,
-          tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
-          },
-          onFinish: async ({ response, reasoning }) => {
-            if (session.user?.id) {
-              try {
-                const sanitizedResponseMessages = sanitizeResponseMessages({
-                  messages: response.messages,
-                  reasoning,
-                });
+      execute: async (dataStream) => {
+        try {
+          const result = streamText({
+            model: myProvider.languageModel(selectedChatModel),
+            system: enhancedSystemPrompt,
+            messages,
+            maxSteps: 5,
+            experimental_activeTools:
+              selectedChatModel === 'chat-model-reasoning'
+                ? []
+                : [
+                    'getWeather',
+                    'createDocument',
+                    'updateDocument',
+                    'requestSuggestions',
+                  ],
+            experimental_transform: smoothStream({ chunking: 'word' }),
+            experimental_generateMessageId: generateUUID,
+            tools: {
+              getWeather,
+              createDocument: createDocument({ session, dataStream }),
+              updateDocument: updateDocument({ session, dataStream }),
+              requestSuggestions: requestSuggestions({
+                session,
+                dataStream,
+              }),
+            },
+            onFinish: async ({ response, reasoning }) => {
+              if (session.user?.id) {
+                try {
+                  const sanitizedResponseMessages = sanitizeResponseMessages({
+                    messages: response.messages,
+                    reasoning,
+                  });
 
-                await saveMessages({
-                  messages: sanitizedResponseMessages.map((message) => {
-                    return {
-                      id: message.id,
-                      chatId: id,
-                      role: message.role,
-                      content: message.content,
-                      createdAt: new Date(),
-                    };
-                  }),
-                });
-              } catch (error) {
-                console.error('Failed to save chat');
+                  if (sanitizedResponseMessages.length > 0) {
+                    await saveMessages({
+                      messages: sanitizedResponseMessages.map((message) => ({
+                        id: message.id,
+                        chatId: id,
+                        role: message.role,
+                        content: message.content,
+                        createdAt: new Date(),
+                      })),
+                    });
+                  }
+                } catch (error) {
+                  console.error('Failed to save chat response:', error);
+                }
               }
-            }
-          },
-          experimental_telemetry: {
-            isEnabled: true,
-            functionId: 'stream-text',
-          },
-        });
+            },
+            experimental_telemetry: {
+              isEnabled: true,
+              functionId: 'stream-text',
+            },
+          });
 
-        result.mergeIntoDataStream(dataStream, {
-          sendReasoning: true,
-        });
+          result.mergeIntoDataStream(dataStream, {
+            sendReasoning: true,
+          });
+        } catch (error) {
+          console.error('Stream processing error:', error);
+          throw error;
+        }
       },
-      onError: () => {
-        return 'Oops, an error occured!';
+      onError: (error) => {
+        console.error('Data stream error:', error);
+        return 'An error occurred while processing your request. Please try again.';
       },
     });
   } catch (error) {

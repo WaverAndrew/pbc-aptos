@@ -7,7 +7,6 @@ The template already ships with the following artifacts:
 - **Text Artifact**: A artifact that allows you to work with text content like drafting essays and emails.
 - **Code Artifact**: A artifact that allows you to write and execute code (Python).
 - **Image Artifact**: A artifact that allows you to work with images like editing, annotating, and processing images.
-- **Sheet Artifact**: A artifact that allows you to work with tabular data like creating, editing, and analyzing data.
 
 ## Adding a Custom Artifact
 
