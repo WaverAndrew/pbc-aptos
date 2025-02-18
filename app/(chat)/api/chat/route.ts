@@ -29,101 +29,113 @@ import { getWeather } from '@/lib/ai/tools/get-weather';
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
-  const {
-    id,
-    messages,
-    selectedChatModel,
-  }: { id: string; messages: Array<Message>; selectedChatModel: string } =
-    await request.json();
+  try {
+    const {
+      id,
+      messages,
+      selectedChatModel,
+    }: { id: string; messages: Array<Message>; selectedChatModel: string } =
+      await request.json();
 
-  const session = await auth();
+    const session = await auth();
 
-  if (!session || !session.user || !session.user.id) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+    if (!session || !session.user || !session.user.id) {
+      console.error('Authentication failed');
+      return new Response('Unauthorized', { status: 401 });
+    }
 
-  const userMessage = getMostRecentUserMessage(messages);
+    const userMessage = getMostRecentUserMessage(messages);
 
-  if (!userMessage) {
-    return new Response('No user message found', { status: 400 });
-  }
+    if (!userMessage) {
+      console.error('No user message found');
+      return new Response('No user message found', { status: 400 });
+    }
 
-  const chat = await getChatById({ id });
+    try {
+      const chat = await getChatById({ id });
 
-  if (!chat) {
-    const title = await generateTitleFromUserMessage({ message: userMessage });
-    await saveChat({ id, userId: session.user.id, title });
-  }
+      if (!chat) {
+        const title = await generateTitleFromUserMessage({ message: userMessage });
+        await saveChat({ id, userId: session.user.id, title });
+      }
 
-  await saveMessages({
-    messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
-  });
+      await saveMessages({
+        messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
+      });
+    } catch (error) {
+      console.error('Database operation failed:', error);
+      return new Response('Database operation failed', { status: 500 });
+    }
 
-  return createDataStreamResponse({
-    execute: (dataStream) => {
-      const result = streamText({
-        model: myProvider.languageModel(selectedChatModel),
-        system: systemPrompt({ selectedChatModel }),
-        messages,
-        maxSteps: 5,
-        experimental_activeTools:
-          selectedChatModel === 'chat-model-reasoning'
-            ? []
-            : [
-                'getWeather',
-                'createDocument',
-                'updateDocument',
-                'requestSuggestions',
-              ],
-        experimental_transform: smoothStream({ chunking: 'word' }),
-        experimental_generateMessageId: generateUUID,
-        tools: {
-          getWeather,
-          createDocument: createDocument({ session, dataStream }),
-          updateDocument: updateDocument({ session, dataStream }),
-          requestSuggestions: requestSuggestions({
-            session,
-            dataStream,
-          }),
-        },
-        onFinish: async ({ response, reasoning }) => {
-          if (session.user?.id) {
-            try {
-              const sanitizedResponseMessages = sanitizeResponseMessages({
-                messages: response.messages,
-                reasoning,
-              });
+    return createDataStreamResponse({
+      execute: (dataStream) => {
+        const result = streamText({
+          model: myProvider.languageModel(selectedChatModel),
+          system: systemPrompt({ selectedChatModel }),
+          messages,
+          maxSteps: 5,
+          experimental_activeTools:
+            selectedChatModel === 'chat-model-reasoning'
+              ? []
+              : [
+                  'getWeather',
+                  'createDocument',
+                  'updateDocument',
+                  'requestSuggestions',
+                ],
+          experimental_transform: smoothStream({ chunking: 'word' }),
+          experimental_generateMessageId: generateUUID,
+          tools: {
+            getWeather,
+            createDocument: createDocument({ session, dataStream }),
+            updateDocument: updateDocument({ session, dataStream }),
+            requestSuggestions: requestSuggestions({
+              session,
+              dataStream,
+            }),
+          },
+          onFinish: async ({ response, reasoning }) => {
+            if (session.user?.id) {
+              try {
+                const sanitizedResponseMessages = sanitizeResponseMessages({
+                  messages: response.messages,
+                  reasoning,
+                });
 
-              await saveMessages({
-                messages: sanitizedResponseMessages.map((message) => {
-                  return {
-                    id: message.id,
-                    chatId: id,
-                    role: message.role,
-                    content: message.content,
-                    createdAt: new Date(),
-                  };
-                }),
-              });
-            } catch (error) {
-              console.error('Failed to save chat');
+                await saveMessages({
+                  messages: sanitizedResponseMessages.map((message) => {
+                    return {
+                      id: message.id,
+                      chatId: id,
+                      role: message.role,
+                      content: message.content,
+                      createdAt: new Date(),
+                    };
+                  }),
+                });
+              } catch (error) {
+                console.error('Failed to save chat');
+              }
             }
-          }
-        },
-        experimental_telemetry: {
-          isEnabled: true,
-          functionId: 'stream-text',
-        },
-      });
+          },
+          experimental_telemetry: {
+            isEnabled: true,
+            functionId: 'stream-text',
+          },
+        });
 
-      result.mergeIntoDataStream(dataStream, {
-        sendReasoning: true,
-      });
-    },
-    onError: () => {
-      return 'Oops, an error occured!';
-    },
-  });
+        result.mergeIntoDataStream(dataStream, {
+          sendReasoning: true,
+        });
+      },
+      onError: () => {
+        return 'Oops, an error occured!';
+      },
+    });
+  } catch (error) {
+    console.error('Chat API error:', error);
+    return new Response('Internal Server Error', { status: 500 });
+  }
 }
 
 export async function DELETE(request: Request) {

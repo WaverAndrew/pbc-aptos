@@ -27,22 +27,30 @@ const client = postgres(process.env.POSTGRES_URL!);
 const db = drizzle(client);
 
 export async function getUser(email: string): Promise<Array<User>> {
+  console.log('Attempting to get user with email:', email);
+  
   try {
-    return await db.select().from(user).where(eq(user.email, email));
+    const result = await db.select().from(user).where(eq(user.email, email));
+    console.log('User query result:', result);
+    return result;
   } catch (error) {
-    console.error('Failed to get user from database');
+    console.error('Failed to get user from database. Error:', error);
     throw error;
   }
 }
 
 export async function createUser(email: string, password: string) {
+  console.log('Creating user with email:', email);
+  
   const salt = genSaltSync(10);
   const hash = hashSync(password, salt);
 
   try {
-    return await db.insert(user).values({ email, password: hash });
+    const result = await db.insert(user).values({ email, password: hash });
+    console.log('User creation successful:', result);
+    return result;
   } catch (error) {
-    console.error('Failed to create user in database');
+    console.error('Failed to create user in database. Error:', error);
     throw error;
   }
 }

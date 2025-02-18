@@ -1,21 +1,21 @@
-import { ChatRequestOptions, Message } from 'ai';
-import { PreviewMessage, ThinkingMessage } from './message';
-import { useScrollToBottom } from './use-scroll-to-bottom';
-import { Overview } from './overview';
-import { memo } from 'react';
-import { Vote } from '@/lib/db/schema';
-import equal from 'fast-deep-equal';
+import { ChatRequestOptions, Message } from "ai";
+import { PreviewMessage, ThinkingMessage } from "./message";
+import { useScrollToBottom } from "./use-scroll-to-bottom";
+import { Overview } from "./overview";
+import { memo } from "react";
+import { Vote } from "@/lib/db/schema";
+import equal from "fast-deep-equal";
 
 interface MessagesProps {
   chatId: string;
   isLoading: boolean;
-  votes: Array<Vote> | undefined;
+
   messages: Array<Message>;
   setMessages: (
-    messages: Message[] | ((messages: Message[]) => Message[]),
+    messages: Message[] | ((messages: Message[]) => Message[])
   ) => void;
   reload: (
-    chatRequestOptions?: ChatRequestOptions,
+    chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
   isArtifactVisible: boolean;
@@ -24,7 +24,7 @@ interface MessagesProps {
 function PureMessages({
   chatId,
   isLoading,
-  votes,
+
   messages,
   setMessages,
   reload,
@@ -46,11 +46,6 @@ function PureMessages({
           chatId={chatId}
           message={message}
           isLoading={isLoading && messages.length - 1 === index}
-          vote={
-            votes
-              ? votes.find((vote) => vote.messageId === message.id)
-              : undefined
-          }
           setMessages={setMessages}
           reload={reload}
           isReadonly={isReadonly}
@@ -59,7 +54,7 @@ function PureMessages({
 
       {isLoading &&
         messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+        messages[messages.length - 1].role === "user" && <ThinkingMessage />}
 
       <div
         ref={messagesEndRef}
@@ -76,7 +71,6 @@ export const Messages = memo(PureMessages, (prevProps, nextProps) => {
   if (prevProps.isLoading && nextProps.isLoading) return false;
   if (prevProps.messages.length !== nextProps.messages.length) return false;
   if (!equal(prevProps.messages, nextProps.messages)) return false;
-  if (!equal(prevProps.votes, nextProps.votes)) return false;
 
   return true;
 });
