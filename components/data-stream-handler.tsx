@@ -2,7 +2,7 @@
 
 import { useChat } from "ai/react";
 import { useEffect, useRef } from "react";
-import { artifactDefinitions, ArtifactKind } from "./artifact";
+import { ArtifactKind } from "./artifact";
 import { Suggestion } from "@/lib/db/schema";
 import { initialArtifactData, useArtifact } from "@/hooks/use-artifact";
 
@@ -10,19 +10,17 @@ export type DataStreamDelta = {
   type:
     | "text-delta"
     | "code-delta"
-    | "sheet-delta"
     | "title"
     | "id"
-    | "suggestion"
+    | "kind"
     | "clear"
-    | "finish"
-    | "kind";
-  content: string | Suggestion;
+    | "finish";
+  content: string;
 };
 
 export function DataStreamHandler({ id }: { id: string }) {
   const { data: dataStream } = useChat({ id });
-  const { artifact, setArtifact, setMetadata } = useArtifact();
+  const { setArtifact } = useArtifact();
   const lastProcessedIndex = useRef(-1);
 
   useEffect(() => {
@@ -32,18 +30,6 @@ export function DataStreamHandler({ id }: { id: string }) {
     lastProcessedIndex.current = dataStream.length - 1;
 
     (newDeltas as DataStreamDelta[]).forEach((delta: DataStreamDelta) => {
-      const artifactDefinition = artifactDefinitions.find(
-        (artifactDefinition) => artifactDefinition.kind === artifact.kind
-      );
-
-      if (artifactDefinition?.onStreamPart) {
-        artifactDefinition.onStreamPart({
-          streamPart: delta,
-          setArtifact,
-          setMetadata,
-        });
-      }
-
       setArtifact((draftArtifact) => {
         if (!draftArtifact) {
           return { ...initialArtifactData, status: "streaming" };
@@ -53,14 +39,14 @@ export function DataStreamHandler({ id }: { id: string }) {
           case "id":
             return {
               ...draftArtifact,
-              documentId: delta.content as string,
+              documentId: delta.content,
               status: "streaming",
             };
 
           case "title":
             return {
               ...draftArtifact,
-              title: delta.content as string,
+              title: delta.content,
               status: "streaming",
             };
 
@@ -68,6 +54,13 @@ export function DataStreamHandler({ id }: { id: string }) {
             return {
               ...draftArtifact,
               kind: delta.content as ArtifactKind,
+              status: "streaming",
+            };
+
+          case "code-delta":
+            return {
+              ...draftArtifact,
+              content: draftArtifact.content + delta.content,
               status: "streaming",
             };
 
@@ -89,7 +82,7 @@ export function DataStreamHandler({ id }: { id: string }) {
         }
       });
     });
-  }, [dataStream, setArtifact, setMetadata, artifact]);
+  }, [dataStream, setArtifact]);
 
   return null;
 }

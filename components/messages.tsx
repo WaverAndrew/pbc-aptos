@@ -34,32 +34,20 @@ function PureMessages({
     useScrollToBottom<HTMLDivElement>();
 
   return (
-    <div
-      ref={messagesContainerRef}
-      className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
-    >
-      {messages.length === 0 && <Overview />}
-
-      {messages.map((message, index) => (
-        <PreviewMessage
-          key={message.id}
-          chatId={chatId}
-          message={message}
-          isLoading={isLoading && messages.length - 1 === index}
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-        />
-      ))}
-
-      {isLoading &&
-        messages.length > 0 &&
-        messages[messages.length - 1].role === "user" && <ThinkingMessage />}
-
-      <div
-        ref={messagesEndRef}
-        className="shrink-0 min-w-[24px] min-h-[24px]"
-      />
+    <div className="flex-1 overflow-y-auto w-full pointer-events-auto">
+      <div className="flex flex-col gap-6 py-4 md:py-6 pointer-events-auto">
+        {messages.map((message) => (
+          <PreviewMessage
+            key={message.id}
+            chatId={chatId}
+            message={message}
+            isLoading={isLoading}
+            setMessages={setMessages}
+            reload={reload}
+            isReadonly={isReadonly}
+          />
+        ))}
+      </div>
     </div>
   );
 }
