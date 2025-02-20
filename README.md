@@ -1,61 +1,146 @@
-<a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Next.js AI Chatbot</h1>
-</a>
+# Aptos AI Developer Assistant 🤖
+
+<div align="center">
+  <img src="public/aptos-logo.png" alt="Aptos AI Dev Assistant Logo" width="200"/>
+  <h3>Your Intelligent Companion for Aptos Development</h3>
+</div>
 
 <p align="center">
-  An Open-Source AI Chatbot Template Built With Next.js and the AI SDK by Vercel.
+  <a href="#features">Features</a> ·
+  <a href="#tech-stack">Tech Stack</a> ·
+  <a href="#getting-started">Getting Started</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#deployment">Deployment</a>
 </p>
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
-</p>
-<br/>
+## Overview
+
+The Aptos AI Developer Assistant is an intelligent chatbot designed to streamline the Aptos development experience. Built with advanced RAG (Retrieval-Augmented Generation) technology, it provides accurate, context-aware answers to technical questions about Move smart contracts, tooling, and deployments while maintaining the highest standards of accuracy and reliability.
 
 ## Features
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://sdk.vercel.ai/docs)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports OpenAI (default), Anthropic, Cohere, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Vercel Postgres powered by Neon](https://vercel.com/storage/postgres) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [NextAuth.js](https://github.com/nextauthjs/next-auth)
-  - Simple and secure authentication
+### 🔍 RAG-Enhanced Search
+- Real-time access to Aptos documentation and code examples
+- Intelligent context understanding and relevant response generation
+- Direct source citations for all provided information
 
-## Model Providers
+### 💻 Smart Code Presentation
+- Syntax-highlighted code blocks with copy functionality
+- Context-aware code snippets
+- Integrated example validation
 
-This template ships with OpenAI `gpt-4o` as the default. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
+### 🎯 Developer-Focused UI
+- Custom-designed interface matching Aptos branding
+- Intuitive navigation and interaction
+- Mobile-responsive design
 
-## Deploy Your Own
+### 🔄 Interactive Features
+- Smart query suggestions
+- Common development patterns recommendations
+- One-click access to frequently asked questions
 
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
+### 📚 Knowledge Integration
+- GitHub issues integration for community context
+- Historical question analysis
+- Similar question suggestions
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot&env=AUTH_SECRET,OPENAI_API_KEY&envDescription=Learn%20more%20about%20how%20to%20get%20the%20API%20Keys%20for%20the%20application&envLink=https%3A%2F%2Fgithub.com%2Fvercel%2Fai-chatbot%2Fblob%2Fmain%2F.env.example&demo-title=AI%20Chatbot&demo-description=An%20Open-Source%20AI%20Chatbot%20Template%20Built%20With%20Next.js%20and%20the%20AI%20SDK%20by%20Vercel.&demo-url=https%3A%2F%2Fchat.vercel.ai&stores=[{%22type%22:%22postgres%22},{%22type%22:%22blob%22}])
+### 🧠 Enhanced Intelligence
+- Zero hallucination architecture
+- Source verification for all responses
+- Confidence scoring system
 
-## Running locally
+### 💬 Advanced Chat Features
+- Persistent chat history
+- Editable message bubbles
+- Context-aware conversation threading
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+## Tech Stack
 
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various OpenAI and authentication provider accounts.
+- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
+- **UI Components**: shadcn/ui, Radix UI
+- **AI/ML**: Vercel AI SDK, OpenAI
+- **Authentication**: NextAuth.js
+- **Data Storage**: Vercel Postgres, Vercel Blob
+- **Vector Store**: Pinecone
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+## Getting Started
+
+### Prerequisites
 
 ```bash
+Node.js 18+
+pnpm
+```
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/aptos-ai-assistant.git
+cd aptos-ai-assistant
+```
+
+2. Install dependencies:
+```bash
 pnpm install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+
+4. Start the development server:
+```bash
 pnpm dev
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000/).
+## Architecture
+
+### RAG Implementation
+Our RAG system processes Aptos documentation and GitHub repositories through the following pipeline:
+1. Custom GitHub scraping of repositories for examples and documentation
+   - Automated repository discovery and cloning
+   - Parsing of Markdown, code files, and repository structures
+   - Extraction of code examples and documentation comments
+2. Document chunking and preprocessing
+3. Embedding generation for both documentation and code
+4. Vector store indexing with metadata
+5. Real-time retrieval and context injection with code-aware ranking
+
+### Response Generation
+- Multi-stage verification
+- Source attribution
+- Confidence scoring
+- Hallucination prevention
+
+## Deployment
+
+### Local Development
+```bash
+pnpm dev
+```
+
+### Production Deployment
+```bash
+pnpm build
+pnpm start
+```
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+- Aptos Labs for their excellent documentation
+- The Move community for their continued support
+- All contributors who have helped shape this project
+
+---
+
+<p align="center">Built with ❤️ for the Aptos Developer Community</p>
