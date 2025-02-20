@@ -19,6 +19,7 @@ import { MessageEditor } from "./message-editor";
 import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
 import { MessageSources } from "./message-sources";
+import { RelevantQuestions } from './relevant-questions';
 
 const PurePreviewMessage = ({
   chatId,
@@ -119,7 +120,12 @@ const PurePreviewMessage = ({
                   </div>
 
                   {message.content && (
-                    <MessageSources content={message.content} />
+                    <div className="flex flex-row items-center gap-2">
+                      <MessageSources content={message.content} />
+                      {message.role === "user" && (
+                        <RelevantQuestions messageContent={message.content} />
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
