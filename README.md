@@ -20,14 +20,14 @@ The Aptos AI Developer Assistant is an intelligent chatbot designed to streamlin
 ## Features
 
 ### 🔍 RAG-Enhanced Search
-- Real-time access to Aptos documentation and code examples
+- Full access to Aptos documentation and Code examples
 - Intelligent context understanding and relevant response generation
 - Direct source citations for all provided information
 
 ### 💻 Smart Code Presentation
 - Syntax-highlighted code blocks with copy functionality
 - Context-aware code snippets
-- Integrated example validation
+
 
 ### 🎯 Developer-Focused UI
 - Custom-designed interface matching Aptos branding
@@ -36,13 +36,13 @@ The Aptos AI Developer Assistant is an intelligent chatbot designed to streamlin
 
 ### 🔄 Interactive Features
 - Smart query suggestions
-- Common development patterns recommendations
-- One-click access to frequently asked questions
+- One-click access to similar asked questions
 
 ### 📚 Knowledge Integration
-- GitHub issues integration for community context
-- Historical question analysis
-- Similar question suggestions
+- GitHub integration for community discussions context
+- Aptos documentation and Code examples
+- Code examples from Aptos GitHub repositories
+
 
 ### 🧠 Enhanced Intelligence
 - Zero hallucination architecture
@@ -56,11 +56,11 @@ The Aptos AI Developer Assistant is an intelligent chatbot designed to streamlin
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
+- **Frontend**: Next.js 15, TypeScript, Tailwind CSS
 - **UI Components**: shadcn/ui, Radix UI
 - **AI/ML**: Vercel AI SDK, OpenAI
 - **Authentication**: NextAuth.js
-- **Data Storage**: Vercel Postgres, Vercel Blob
+- **Data Storage**: Neon Postgres, Vercel Blob
 - **Vector Store**: Pinecone
 
 ## Getting Started
@@ -109,7 +109,6 @@ Our RAG system processes Aptos documentation and GitHub repositories through the
 5. Real-time retrieval and context injection with code-aware ranking
 
 ### Response Generation
-- Multi-stage verification
 - Source attribution
 - Confidence scoring
 - Hallucination prevention
@@ -127,20 +126,5 @@ pnpm build
 pnpm start
 ```
 
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Acknowledgments
-
-- Aptos Labs for their excellent documentation
-- The Move community for their continued support
-- All contributors who have helped shape this project
-
----
 
 <p align="center">Built with ❤️ for the Aptos Developer Community</p>

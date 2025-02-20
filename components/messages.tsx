@@ -35,19 +35,32 @@ function PureMessages({
 
   return (
     <div className="flex-1 overflow-y-auto w-full pointer-events-auto">
-      <div className="flex flex-col gap-6 py-4 md:py-6 pointer-events-auto">
-        {messages.map((message) => (
-          <PreviewMessage
-            key={message.id}
-            chatId={chatId}
-            message={message}
-            isLoading={isLoading}
-            setMessages={setMessages}
-            reload={reload}
-            isReadonly={isReadonly}
+      {messages.length === 0 ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <img
+            src="/images/aptos-white.svg"
+            alt="Aptos Logo"
+            className="w-32 h-32 opacity-10"
           />
-        ))}
-      </div>
+          <p className="text-muted-foreground mt-4 text-6xl font-bold opacity-10">
+            Aptos Dev AI
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-6 py-4 md:py-6 pointer-events-auto">
+          {messages.map((message) => (
+            <PreviewMessage
+              key={message.id}
+              chatId={chatId}
+              message={message}
+              isLoading={isLoading}
+              setMessages={setMessages}
+              reload={reload}
+              isReadonly={isReadonly}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
