@@ -7,8 +7,21 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://chat.vercel.ai'),
-  title: 'Next.js Chatbot Template',
-  description: 'Next.js chatbot template using the AI SDK.',
+  title: 'Aptos Dev AI - Your Aptos Blockchain Assistant',
+  description: 'An AI-powered chatbot that helps developers with Aptos blockchain development by providing answers and guidance based on Aptos documentation and example code.',
+  keywords: ['Aptos', 'blockchain', 'AI', 'developer tools', 'smart contracts', 'Move language', 'Web3'],
+  authors: [{ name: 'Aptos Dev AI' }],
+  openGraph: {
+    title: 'Aptos Dev AI - Your Aptos Blockchain Assistant',
+    description: 'Get instant answers to your Aptos blockchain development questions with AI-powered assistance.',
+    type: 'website',
+    siteName: 'Aptos Dev AI',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Aptos Dev AI - Your Aptos Blockchain Assistant',
+    description: 'Get instant answers to your Aptos blockchain development questions with AI-powered assistance.',
+  },
 };
 
 export const viewport = {

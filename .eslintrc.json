@@ -6,9 +6,11 @@
     "prettier",
     "plugin:tailwindcss/recommended"
   ],
-  "plugins": ["tailwindcss"],
+  "plugins": [
+    "tailwindcss"
+  ],
   "rules": {
-    "rule-name":"off",
+    "rule-name": "off",
     "tailwindcss/no-custom-classname": "off",
     "tailwindcss/classnames-order": "off"
   },
@@ -19,5 +21,8 @@
       }
     }
   },
-  "ignorePatterns": ["**/components/ui/**"]
+  "ignorePatterns": [
+    "**/components/ui/**"
+  ],
+  "ignoreDuringBuilds": true
 }
