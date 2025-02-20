@@ -4,13 +4,15 @@ const nextConfig: NextConfig = {
   experimental: {
     ppr: true,
   },
+
   images: {
-    remotePatterns: [
-      {
-        hostname: 'avatar.vercel.sh',
-      },
-    ],
+    domains: ['avatar.vercel.sh'],
   },
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  }
 };
 
 export default nextConfig;

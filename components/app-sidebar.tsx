@@ -34,8 +34,13 @@ export function AppSidebar({ user }: { user: User | undefined }) {
               }}
               className="flex flex-row gap-3 items-center"
             >
-              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
-                Chatbot
+              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer flex items-center gap-2">
+                <img
+                  src="/images/aptos-white.svg"
+                  alt="Developer Chatbot Logo"
+                  className="w-5 h-5"
+                />
+                Dev AI
               </span>
             </Link>
             <Tooltip>
