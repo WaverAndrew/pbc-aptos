@@ -3,17 +3,10 @@
 import type { ChatRequestOptions, Message } from "ai";
 import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useMemo, useState } from "react";
-
-import type { Vote } from "@/lib/db/schema";
+import { memo, useState } from "react";
 
 import { DocumentToolCall, DocumentToolResult } from "./document";
-import {
-  ChevronDownIcon,
-  LoaderIcon,
-  PencilEditIcon,
-  SparklesIcon,
-} from "./icons";
+import { LoaderIcon, PencilEditIcon, SparklesIcon } from "./icons";
 import { Markdown } from "./markdown";
 import { MessageActions } from "./message-actions";
 import { PreviewAttachment } from "./preview-attachment";
@@ -25,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { MessageEditor } from "./message-editor";
 import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
+import { MessageSources } from "./message-sources";
 
 const PurePreviewMessage = ({
   chatId,
@@ -120,9 +114,13 @@ const PurePreviewMessage = ({
                 >
                   <div className="w-full">
                     <Markdown className="w-full">
-                      {message.content as string}
+                      {(message.content as string)?.replace(/\{\{.*?\}\}/g, '')}
                     </Markdown>
                   </div>
+
+                  {message.content && (
+                    <MessageSources content={message.content} />
+                  )}
                 </div>
               </div>
             )}

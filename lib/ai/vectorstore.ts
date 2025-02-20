@@ -2,8 +2,8 @@ import { Pinecone } from '@pinecone-database/pinecone';
 import { getEmbeddings } from './embeddings';
 import { config } from 'dotenv';
 config({
-    path: '.env.local',
-  });
+  path: '.env.local',
+});
 
 const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY!,
@@ -12,40 +12,63 @@ const pinecone = new Pinecone({
 const index = pinecone.Index(process.env.PINECONE_INDEX_NAME!);
 
 // Debug flag to disable vector retrieval
-export const ENABLE_VECTOR_RETRIEVAL = false;
+export const ENABLE_VECTOR_RETRIEVAL = true;
 
 export async function retrieveRelevantContext(
   query: string,
-  topK: number = 3
+  topK: number = 10
 ): Promise<string> {
-  // Early return if vector retrieval is disabled
   if (!ENABLE_VECTOR_RETRIEVAL) {
+    console.log('Vector retrieval is disabled');
     return '';
   }
 
   try {
-    // Generate embeddings for the query
+    console.log('Generating embeddings for query:', query);
     const queryEmbedding = await getEmbeddings(query);
 
-    // Search for similar vectors in Pinecone
+    console.log('Querying Pinecone...');
     const queryResponse = await index.query({
       vector: queryEmbedding,
       topK,
       includeMetadata: true,
     });
 
-    // Extract and format the relevant context from the matches
+    console.log('Pinecone response:', queryResponse);
+
     const relevantContexts = queryResponse.matches
-      .filter((match) => match.score && match.score > 0.7) // Adjust threshold as needed
+      .filter((match) => {
+        const passes = match.score && match.score > 0.2;
+        if (!passes) {
+          console.log(`Match filtered out due to low score: ${match.score}`);
+        }
+        return passes;
+      })
       .map((match) => {
         const metadata = match.metadata as { text: string; source?: string };
-        return metadata.text;
+        console.log('Match metadata:', metadata);
+        return {
+          content: metadata.text,
+          source: metadata.source || 'Unknown source'
+        };
       });
 
-    // Join all relevant contexts with newlines
-    return relevantContexts.join('\n\n');
+    console.log('Filtered contexts:', relevantContexts);
+
+    // Format contexts as JSON string
+    const formattedContexts = JSON.stringify(
+      { chunks: relevantContexts },
+      null,
+      2
+    );
+
+    return formattedContexts;
   } catch (error) {
     console.error('Error retrieving context:', error);
-    return ''; // Return empty string if retrieval fails
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Stack trace:', error.stack);
+    }
+    return '';
   }
 }

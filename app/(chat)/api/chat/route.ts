@@ -76,6 +76,13 @@ export async function POST(request: Request) {
       context: relevantContext 
     });
 
+    // Add logging for testing
+    console.log('Final prompt with context:', {
+      systemPrompt: enhancedSystemPrompt,
+      relevantContext,
+      userMessage: userMessage.content
+    });
+
     return createDataStreamResponse({
       execute: async (dataStream) => {
         try {

@@ -8,6 +8,7 @@
   ],
   "plugins": ["tailwindcss"],
   "rules": {
+    "rule-name":"off",
     "tailwindcss/no-custom-classname": "off",
     "tailwindcss/classnames-order": "off"
   },
