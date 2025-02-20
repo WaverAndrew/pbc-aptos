@@ -42,8 +42,8 @@ export function CodeBlock({
     const shouldBeCollapsible = lineCount > 15;
 
     return (
-      <div className="code-block not-prose relative max-w-full z-10">
-        <div className="absolute right-4 top-4">
+      <pre className="code-block not-prose relative max-w-full z-10">
+        <span className="absolute right-4 top-4">
           <button
             onClick={handleCopy}
             className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
@@ -55,15 +55,15 @@ export function CodeBlock({
               <CopyIcon size={16} />
             )}
           </button>
-        </div>
-        <pre
+        </span>
+        <code
           {...props}
-          className={`text-sm dark:bg-zinc-900 p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900 ${
+          className={`block whitespace-pre text-sm dark:bg-zinc-900 p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900 ${
             isExpanded ? "max-h-none" : "max-h-[400px] overflow-hidden"
           }`}
         >
-          <code className="block whitespace-pre">{children}</code>
-        </pre>
+          {children}
+        </code>
 
         {shouldBeCollapsible && (
           <button
@@ -79,7 +79,7 @@ export function CodeBlock({
             )}
           </button>
         )}
-      </div>
+      </pre>
     );
   }
 
