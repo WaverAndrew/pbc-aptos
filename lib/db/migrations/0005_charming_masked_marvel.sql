@@ -1,1 +1,0 @@
-ALTER TABLE "User" ADD COLUMN "privateKey" varchar(128);
