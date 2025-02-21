@@ -1,7 +1,7 @@
 # Aptos AI Developer Assistant 🤖
 
 <div align="center">
-  <img src="public/aptos-logo.png" alt="Aptos AI Dev Assistant Logo" width="200"/>
+  <img src="public/images/Aptos_Primary_BLK.svg" alt="Aptos AI Dev Assistant Logo" width="200"/>
   <h3>Your Intelligent Companion for Aptos Development</h3>
 </div>
 
