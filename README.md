@@ -64,7 +64,6 @@ The Aptos AI Developer Assistant is an intelligent chatbot that combines Move Ag
   - NextAuth.js
 - **Data Storage**:
   - Database for chat persistence
-  - Vector store for context retrieval
 
 ## Getting Started
 
