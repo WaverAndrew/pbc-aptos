@@ -1,29 +1,30 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Button } from './ui/button';
-import { ChatRequestOptions, CreateMessage, Message } from 'ai';
-import { memo } from 'react';
+import { motion } from "framer-motion";
+import { Button } from "./ui/button";
+import { ChatRequestOptions, CreateMessage, Message } from "ai";
+import { memo } from "react";
 
 interface SuggestedActionsProps {
   chatId: string;
   append: (
     message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
+    chatRequestOptions?: ChatRequestOptions
   ) => Promise<string | null | undefined>;
 }
 
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'Ask general questions about Aptos',
-      label: 'How to create an NFT Marketplace on Aptos?',
-      action: 'How to create an NFT Marketplace on Aptos?',
+      title: "Check Account Balance",
+      label: "Report all the balances for the account",
+      action:
+        "Give me a report of all the balances for the account 0x3fc562a1be37a72571fe66c0431b2504456f563588cd61b57cc626cea93961b3",
     },
     {
-      title: 'Write code to',
-      label: `Create a smart contract in Aptos`,
-      action: `Write code to create a basic smart contract in Aptos Move language with examples`,
+      title: "Interaction with Aries",
+      label: `Create a new profile on Aries`,
+      action: `Create a new profile on Aries`,
     },
   ];
 
@@ -36,15 +37,15 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
           exit={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.05 * index }}
           key={`suggested-action-${suggestedAction.title}-${index}`}
-          className={index > 1 ? 'hidden sm:block' : 'block'}
+          className={index > 1 ? "hidden sm:block" : "block"}
         >
           <Button
             variant="ghost"
             onClick={async () => {
-              window.history.replaceState({}, '', `/chat/${chatId}`);
+              window.history.replaceState({}, "", `/chat/${chatId}`);
 
               append({
-                role: 'user',
+                role: "user",
                 content: suggestedAction.action,
               });
             }}
