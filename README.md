@@ -1,4 +1,4 @@
-# Aptos AI Developer Assistant 🤖
+# Aptos AI Developer Assistant | Track 1 🤖
 
 <div align="center">
   <img src="public/images/Aptos_Primary_BLK.svg" alt="Aptos AI Dev Assistant Logo" width="200"/>
