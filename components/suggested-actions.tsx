@@ -22,9 +22,9 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
         "Give me a report of all the balances for the account 0x3fc562a1be37a72571fe66c0431b2504456f563588cd61b57cc626cea93961b3",
     },
     {
-      title: "Interaction with Aries",
-      label: `Create a new profile on Aries`,
-      action: `Create a new profile on Aries`,
+      title: "Create a new token",
+      label: `With a certain symbol and URI`,
+      action: `Create a token with the symbol PBC and the URI example-pbc.com`,
     },
   ];
 

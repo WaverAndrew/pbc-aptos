@@ -68,9 +68,11 @@ export function MessageContent({
         className={cn("flex flex-col gap-4 w-full", {
           "bg-primary text-primary-foreground px-3 py-2 rounded-xl":
             message.role === "user",
+          "bg-card text-card-foreground px-3 py-2 rounded-xl":
+            message.role === "assistant",
         })}
       >
-        <div className="w-full prose dark:prose-invert max-w-none">
+        <div className="w-full max-w-none [&>*]:text-inherit">
           <Markdown>
             {(message.content as string)?.replace(/\{\{.*?\}\}/g, "")}
           </Markdown>
