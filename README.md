@@ -14,7 +14,7 @@
 </p>
 <p align="center">
   
-  <a href="https://pbc-aptos.vercel.app" target="_blank">Visit Example</a>
+  <a href="https://pbc-aptos.vercel.app" target="_blank">Visit Live Demo</a>
 </p>
 
 ## Overview
