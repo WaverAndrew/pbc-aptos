@@ -1,9 +1,8 @@
 'use server';
 
 import { z } from 'zod';
-
+import { Account, Network, PrivateKey, PrivateKeyVariants, Aptos, AptosConfig } from "@aptos-labs/ts-sdk";
 import { createUser, getUser } from '@/lib/db/queries';
-
 import { signIn } from './auth';
 
 const authFormSchema = z.object({
@@ -43,12 +42,12 @@ export const login = async (
 
 export interface RegisterActionState {
   status:
-    | 'idle'
-    | 'in_progress'
-    | 'success'
-    | 'failed'
-    | 'user_exists'
-    | 'invalid_data';
+  | 'idle'
+  | 'in_progress'
+  | 'success'
+  | 'failed'
+  | 'user_exists'
+  | 'invalid_data';
 }
 
 export const register = async (
@@ -66,10 +65,30 @@ export const register = async (
     if (user) {
       return { status: 'user_exists' } as RegisterActionState;
     }
-    await createUser(validatedData.email, validatedData.password);
+
+    // Generate a new Aptos account for the user
+    const account = Account.generate();
+    const rawPrivateKey = account.privateKey.toString();
+    // Format the private key according to AIP-80
+    const privateKey = PrivateKey.formatPrivateKey(rawPrivateKey, PrivateKeyVariants.Ed25519);
+
+    console.log('Created new Aptos account with address:', account.accountAddress.toString());
+
+    // Initialize Aptos client for devnet
+    const config = new AptosConfig({ network: Network.MAINNET });
+    const aptos = new Aptos(config);
+
+    // Fund the account with testnet APT
+    
+
+    // Create user with email, password, and private key
+    await createUser(validatedData.email, validatedData.password, privateKey);
+
+    // Sign in with the credentials and include private key in the session
     await signIn('credentials', {
       email: validatedData.email,
       password: validatedData.password,
+      privateKey: privateKey,
       redirect: false,
     });
 
@@ -78,7 +97,7 @@ export const register = async (
     if (error instanceof z.ZodError) {
       return { status: 'invalid_data' };
     }
-
+    console.error('Registration error:', error);
     return { status: 'failed' };
   }
 };

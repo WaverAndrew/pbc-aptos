@@ -1,10 +1,13 @@
 import { compare } from 'bcrypt-ts';
-import NextAuth, { type User, type Session } from 'next-auth';
+import NextAuth, { type User as NextAuthUser, type Session } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-
 import { getUser } from '@/lib/db/queries';
-
 import { authConfig } from './auth.config';
+import type { User as DbUser } from '@/lib/db/schema';
+
+export type User = NextAuthUser & {
+  privateKey?: string;
+};
 
 interface ExtendedSession extends Session {
   user: User;
@@ -26,7 +29,13 @@ export const {
         // biome-ignore lint: Forbidden non-null assertion.
         const passwordsMatch = await compare(password, users[0].password!);
         if (!passwordsMatch) return null;
-        return users[0] as any;
+        // Include privateKey in the returned user object
+        const dbUser = users[0] as DbUser;
+        return {
+          id: dbUser.id,
+          email: dbUser.email,
+          privateKey: dbUser.privateKey
+        } as User;
       },
     }),
   ],
@@ -34,8 +43,8 @@ export const {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.privateKey = (user as User).privateKey;
       }
-
       return token;
     },
     async session({
@@ -47,8 +56,8 @@ export const {
     }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.privateKey = token.privateKey as string;
       }
-
       return session;
     },
   },

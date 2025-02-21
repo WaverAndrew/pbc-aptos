@@ -20,6 +20,8 @@ import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
 import { MessageSources } from "./message-sources";
 import { RelevantQuestions } from './relevant-questions';
+import { MessageToolInvocation } from "./message-tool-invocation";
+import { MessageContent } from "./message-content";
 
 const PurePreviewMessage = ({
   chatId,
@@ -81,6 +83,83 @@ const PurePreviewMessage = ({
               </div>
             )}
 
+            {message.toolInvocations && message.toolInvocations.length > 0 && (
+              <div className="flex flex-col gap-4">
+                {message.toolInvocations.map((toolInvocation) => {
+                  const { toolName, toolCallId, state, args } = toolInvocation;
+
+                  // Special tool handlers
+                  if (["getWeather", "createDocument", "updateDocument", "requestSuggestions"].includes(toolName)) {
+                    if (state === "result") {
+                      const { result } = toolInvocation;
+                      return (
+                        <div key={toolCallId}>
+                          {toolName === "getWeather" ? (
+                            <Weather weatherAtLocation={result} />
+                          ) : toolName === "createDocument" ? (
+                            <DocumentPreview
+                              isReadonly={isReadonly}
+                              result={result}
+                            />
+                          ) : toolName === "updateDocument" ? (
+                            <DocumentToolResult
+                              type="update"
+                              result={result}
+                              isReadonly={isReadonly}
+                            />
+                          ) : (
+                            <DocumentToolResult
+                              type="request-suggestions"
+                              result={result}
+                              isReadonly={isReadonly}
+                            />
+                          )}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div
+                        key={toolCallId}
+                        className={cx({
+                          skeleton: ["getWeather"].includes(toolName),
+                        })}
+                      >
+                        {toolName === "getWeather" ? (
+                          <Weather />
+                        ) : toolName === "createDocument" ? (
+                          <DocumentPreview isReadonly={isReadonly} args={args} />
+                        ) : toolName === "updateDocument" ? (
+                          <DocumentToolCall
+                            type="update"
+                            args={args}
+                            isReadonly={isReadonly}
+                          />
+                        ) : (
+                          <DocumentToolCall
+                            type="request-suggestions"
+                            args={args}
+                            isReadonly={isReadonly}
+                          />
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // Generic tool handler for all other tools
+                  return (
+                    <div key={toolCallId}>
+                      <MessageToolInvocation
+                        isLoading={state !== "result"}
+                        toolName={toolName}
+                        args={args}
+                        result={state === "result" ? toolInvocation.result : undefined}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {message.reasoning && (
               <MessageReasoning
                 isLoading={isLoading}
@@ -88,126 +167,15 @@ const PurePreviewMessage = ({
               />
             )}
 
-            {(message.content || message.reasoning) && mode === "view" && (
-              <div className="flex flex-row gap-2 items-start">
-                {message.role === "user" && !isReadonly && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100"
-                        onClick={() => {
-                          setMode("edit");
-                        }}
-                      >
-                        <PencilEditIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit message</TooltipContent>
-                  </Tooltip>
-                )}
-
-                <div
-                  className={cn("flex flex-col gap-4 w-full", {
-                    "bg-primary text-primary-foreground px-3 py-2 rounded-xl":
-                      message.role === "user",
-                  })}
-                >
-                  <div className="w-full">
-                    <Markdown className="w-full">
-                      {(message.content as string)?.replace(/\{\{.*?\}\}/g, '')}
-                    </Markdown>
-                  </div>
-
-                  {message.content && (
-                    <div className="flex flex-row items-center gap-2">
-                      <MessageSources content={message.content} />
-                      {message.role === "user" && (
-                        <RelevantQuestions messageContent={message.content} />
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {message.content && mode === "edit" && (
-              <div className="flex flex-row gap-2 items-start">
-                <div className="size-8" />
-
-                <MessageEditor
-                  key={message.id}
-                  message={message}
-                  setMode={setMode}
-                  setMessages={setMessages}
-                  reload={reload}
-                />
-              </div>
-            )}
-
-            {message.toolInvocations && message.toolInvocations.length > 0 && (
-              <div className="flex flex-col gap-4">
-                {message.toolInvocations.map((toolInvocation) => {
-                  const { toolName, toolCallId, state, args } = toolInvocation;
-
-                  if (state === "result") {
-                    const { result } = toolInvocation;
-
-                    return (
-                      <div key={toolCallId}>
-                        {toolName === "getWeather" ? (
-                          <Weather weatherAtLocation={result} />
-                        ) : toolName === "createDocument" ? (
-                          <DocumentPreview
-                            isReadonly={isReadonly}
-                            result={result}
-                          />
-                        ) : toolName === "updateDocument" ? (
-                          <DocumentToolResult
-                            type="update"
-                            result={result}
-                            isReadonly={isReadonly}
-                          />
-                        ) : toolName === "requestSuggestions" ? (
-                          <DocumentToolResult
-                            type="request-suggestions"
-                            result={result}
-                            isReadonly={isReadonly}
-                          />
-                        ) : (
-                          <pre>{JSON.stringify(result, null, 2)}</pre>
-                        )}
-                      </div>
-                    );
-                  }
-                  return (
-                    <div
-                      key={toolCallId}
-                      className={cx({
-                        skeleton: ["getWeather"].includes(toolName),
-                      })}
-                    >
-                      {toolName === "getWeather" ? (
-                        <Weather />
-                      ) : toolName === "createDocument" ? (
-                        <DocumentPreview isReadonly={isReadonly} args={args} />
-                      ) : toolName === "updateDocument" ? (
-                        <DocumentToolCall
-                          type="update"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === "requestSuggestions" ? (
-                        <DocumentToolCall
-                          type="request-suggestions"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
+            {(message.content || message.reasoning) && (
+              <MessageContent
+                message={message}
+                mode={mode}
+                setMode={setMode}
+                isReadonly={isReadonly}
+                setMessages={setMessages}
+                reload={reload}
+              />
             )}
 
             {!isReadonly && (

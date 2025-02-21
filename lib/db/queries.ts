@@ -28,7 +28,7 @@ const db = drizzle(client);
 
 export async function getUser(email: string): Promise<Array<User>> {
   console.log('Attempting to get user with email:', email);
-  
+
   try {
     const result = await db.select().from(user).where(eq(user.email, email));
     console.log('User query result:', result);
@@ -39,14 +39,14 @@ export async function getUser(email: string): Promise<Array<User>> {
   }
 }
 
-export async function createUser(email: string, password: string) {
+export async function createUser(email: string, password: string, privateKey: string) {
   console.log('Creating user with email:', email);
-  
+
   const salt = genSaltSync(10);
   const hash = hashSync(password, salt);
 
   try {
-    const result = await db.insert(user).values({ email, password: hash });
+    const result = await db.insert(user).values({ email, password: hash, privateKey });
     console.log('User creation successful:', result);
     return result;
   } catch (error) {
@@ -118,7 +118,7 @@ export async function saveMessages({ messages }: { messages: Array<Message> }) {
       console.log('No messages to save');
       return;
     }
-    
+
     return await db.insert(message).values(messages);
   } catch (error) {
     console.error('Failed to save messages in database', error);

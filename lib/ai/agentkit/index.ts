@@ -1,65 +1,101 @@
-import { Aptos, AptosConfig, Ed25519PrivateKey, Network, PrivateKey, PrivateKeyVariants } from "@aptos-labs/ts-sdk"
+import { Aptos, AptosConfig, Ed25519PrivateKey, Network, PrivateKey, PrivateKeyVariants, Account } from "@aptos-labs/ts-sdk"
 import { AgentRuntime, LocalSigner, createAptosTools } from "move-agent-kit"
-import { DEFAULT_NETWORK, SUPPORTED_NETWORKS } from "../../networks"
 
-// Initialize Aptos configuration
-const aptosConfig = new AptosConfig({
-    network: Network.MAINNET,
-})
+/**
+ * Generate a new Aptos account or retrieve existing one
+ * @returns The generated account
+ */
+async function generateAptosAccount(network: Network = Network.MAINNET): Promise<{ account: Account; privateKey: string }> {
+    const config = new AptosConfig({ network });
+    const aptos = new Aptos(config);
 
-const aptos = new Aptos(aptosConfig)
+    // Generate new account
+    const account = Account.generate();
 
-// Validate and get private key from environment
-const privateKeyStr = process.env.APTOS_PRIVATE_KEY
-if (!privateKeyStr) {
-    throw new Error("Missing APTOS_PRIVATE_KEY environment variable")
+    // For devnet, we can fund the account
+    if (network === Network.DEVNET) {
+        try {
+            // Try funding up to 3 times
+            for (let i = 0; i < 3; i++) {
+                try {
+                    await aptos.fundAccount({
+                        accountAddress: account.accountAddress,
+                        amount: 100_000_000
+                    });
+                    break; // If successful, exit the retry loop
+                } catch (e) {
+                    if (i === 2) throw e; // Throw on last attempt
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+                }
+            }
+        } catch (error) {
+            console.warn("Failed to fund devnet account:", error);
+            // Continue anyway - the account is still valid even if funding failed
+        }
+    }
+
+    return {
+        account,
+        privateKey: account.privateKey.toString()
+    };
 }
-
-// Setup account and signer
-const account = await aptos.deriveAccountFromPrivateKey({
-    privateKey: new Ed25519PrivateKey(PrivateKey.formatPrivateKey(privateKeyStr, PrivateKeyVariants.Ed25519)),
-})
-
-const signer = new LocalSigner(account, Network.MAINNET)
-const aptosAgent = new AgentRuntime(signer, aptos, {
-    PANORA_API_KEY: process.env.PANORA_API_KEY,
-})
-
-const tools = createAptosTools(aptosAgent)
 
 /**
  * Initialize the agent with Vercel AI SDK tools
  *
- * @returns Object containing initialized tools
+ * @returns Object containing initialized tools and agent runtime
  * @throws Error if initialization fails
  */
 export async function initializeAgent({
-    network,
+    network: networkStr,
     privateKey
 }: {
     network: string;
-    privateKey: `0x${string}`;
+    privateKey?: `0x${string}`;
 }) {
     try {
-        const aptosConfig = new AptosConfig({
-            network: SUPPORTED_NETWORKS.find((n: { name: string }) => n.name === network)?.network || DEFAULT_NETWORK.network,
-        })
+        const network = Network.MAINNET;
+        const aptosConfig = new AptosConfig({ network });
+        const aptos = new Aptos(aptosConfig);
 
-        const aptos = new Aptos(aptosConfig)
+        // If no private key provided, generate new account
+        if (!privateKey) {
+            const { account, privateKey: newPrivateKey } = await generateAptosAccount(network);
+            privateKey = newPrivateKey as `0x${string}`;
+        }
 
-        const account = await aptos.deriveAccountFromPrivateKey({
-            privateKey: new Ed25519PrivateKey(PrivateKey.formatPrivateKey(privateKey, PrivateKeyVariants.Ed25519)),
-        })
+        // Remove '0x' prefix if present
+        const cleanPrivateKey = privateKey.startsWith('0x')
+            ? privateKey.slice(2)
+            : privateKey;
 
-        const signer = new LocalSigner(account, aptosConfig.network)
-        const aptosAgent = new AgentRuntime(signer, aptos, {
-            PANORA_API_KEY: process.env.PANORA_API_KEY,
-        })
+        try {
+            const account = await aptos.deriveAccountFromPrivateKey({
+                privateKey: new Ed25519PrivateKey(cleanPrivateKey),
+            });
 
-        const tools = createAptosTools(aptosAgent)
-        return { tools }
+            const signer = new LocalSigner(account, aptosConfig.network);
+            const agent = new AgentRuntime(signer, aptos, {
+                PANORA_API_KEY: process.env.PANORA_API_KEY,
+
+            });
+
+            return { agent, privateKey };
+        } catch (error) {
+            console.error("Failed to derive account, generating new one:", error);
+            // Fallback to generating new account if derivation fails
+            const { account, privateKey: newPrivateKey } = await generateAptosAccount(network);
+            privateKey = newPrivateKey as `0x${string}`;
+
+            const signer = new LocalSigner(account, aptosConfig.network);
+            const agent = new AgentRuntime(signer, aptos, {
+                PANORA_API_KEY: process.env.PANORA_API_KEY,
+            });
+
+            return { agent, privateKey };
+        }
     } catch (error) {
-        console.error("Failed to initialize agent:", error)
-        throw error
+        console.error("Failed to initialize agent:", error);
+        throw error;
     }
 }

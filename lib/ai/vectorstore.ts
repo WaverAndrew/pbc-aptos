@@ -12,7 +12,7 @@ const pinecone = new Pinecone({
 const index = pinecone.Index(process.env.PINECONE_INDEX_NAME!);
 
 // Debug flag to disable vector retrieval
-export const ENABLE_VECTOR_RETRIEVAL = true;
+export const ENABLE_VECTOR_RETRIEVAL = false;
 
 export async function retrieveRelevantContext(
   query: string,

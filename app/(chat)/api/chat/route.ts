@@ -4,7 +4,8 @@ import {
   smoothStream,
   streamText,
 } from 'ai';
-
+import { Aptos, AptosConfig, Ed25519PrivateKey, Network, PrivateKey, PrivateKeyVariants } from "@aptos-labs/ts-sdk";
+import { AgentRuntime, LocalSigner, createAptosTools } from "move-agent-kit";
 import { auth } from '@/app/(auth)/auth';
 import { myProvider } from '@/lib/ai/models';
 import { systemPrompt } from '@/lib/ai/prompts';
@@ -21,11 +22,11 @@ import {
 } from '@/lib/utils';
 
 import { generateTitleFromUserMessage } from '../../actions';
-import { createDocument } from '@/lib/ai/tools/create-document';
-import { updateDocument } from '@/lib/ai/tools/update-document';
-import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
-import { getWeather } from '@/lib/ai/tools/get-weather';
 import { retrieveRelevantContext } from '@/lib/ai/vectorstore';
+import { initializeAgent } from '@/lib/ai/agentkit';
+import { getVercelAITools } from '@/lib/ai/agentkit/get-vercel-ai-tools';
+import { getMoveAgentTools } from '@/lib/ai/agentkit/get-move-agent-tools';
+import type { User } from '@/app/(auth)/auth';
 
 export const maxDuration = 60;
 
@@ -35,14 +36,25 @@ export async function POST(request: Request) {
       id,
       messages,
       selectedChatModel,
-    }: { id: string; messages: Array<Message>; selectedChatModel: string } =
-      await request.json();
+      network,
+    }: {
+      id: string;
+      messages: Array<Message>;
+      selectedChatModel: string;
+      network: string;
+    } = await request.json();
 
     const session = await auth();
 
     if (!session || !session.user || !session.user.id) {
       console.error('Authentication failed');
       return new Response('Unauthorized', { status: 401 });
+    }
+
+    const user = session.user as User;
+    if (!user.privateKey) {
+      console.error('No private key found in session');
+      return new Response('Private key not found', { status: 400 });
     }
 
     const userMessage = getMostRecentUserMessage(messages);
@@ -70,10 +82,10 @@ export async function POST(request: Request) {
     }
 
     const relevantContext = await retrieveRelevantContext(userMessage.content);
-    
-    const enhancedSystemPrompt = systemPrompt({ 
+
+    const enhancedSystemPrompt = systemPrompt({
       selectedChatModel,
-      context: relevantContext 
+      context: relevantContext
     });
 
     // Add logging for testing
@@ -83,6 +95,16 @@ export async function POST(request: Request) {
       userMessage: userMessage.content
     });
 
+    // Initialize Aptos agent with the user's private key from session
+    const { agent } = await initializeAgent({
+      network: Network.MAINNET,
+      privateKey: user.privateKey?.startsWith('0x')
+        ? user.privateKey as `0x${string}`
+        : `0x${user.privateKey}` as `0x${string}`
+    });
+
+    const tools = getMoveAgentTools(agent);
+
     return createDataStreamResponse({
       execute: async (dataStream) => {
         try {
@@ -91,26 +113,25 @@ export async function POST(request: Request) {
             system: enhancedSystemPrompt,
             messages,
             maxSteps: 5,
-            experimental_activeTools:
-              selectedChatModel === 'chat-model-reasoning'
-                ? []
-                : [
-                    'getWeather',
-                    'createDocument',
-                    'updateDocument',
-                    'requestSuggestions',
-                  ],
+            experimental_activeTools: [
+              'getTransaction',
+              'getTokenPrice',
+              'getTokenDetails',
+              'getPoolDetails',
+              'getUserPosition',
+              'swapWithPanora',
+              'getAccountResources',
+              'getBalance',
+              'burnNFT',
+              'burnToken',
+              'createToken',
+              'createAriesProfile',
+              'lendAriesToken',
+              'withdrawEchelonToken'
+            ],
             experimental_transform: smoothStream({ chunking: 'word' }),
             experimental_generateMessageId: generateUUID,
-            tools: {
-              getWeather,
-              createDocument: createDocument({ session, dataStream }),
-              updateDocument: updateDocument({ session, dataStream }),
-              requestSuggestions: requestSuggestions({
-                session,
-                dataStream,
-              }),
-            },
+            tools: tools,
             onFinish: async ({ response, reasoning }) => {
               if (session.user?.id) {
                 try {
